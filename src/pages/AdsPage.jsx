@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Plus, Pencil, Trash2, X, Search, Megaphone, Download } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { createBasePDF, tableStyles, money } from '../lib/pdfExport'
+import { createBasePDF, tableStyles, money, autoTable } from '../lib/pdfExport'
 
 const PLATAFORMAS = ['Meta', 'Google', 'TikTok', 'Instagram', 'Otra']
 const OBJETIVOS = ['Awareness', 'Conversión', 'Tráfico', 'Interacción', 'Leads', 'Otro']
@@ -124,7 +124,7 @@ export default function AdsPage() {
     const total = filtered.reduce((acc, p) => acc + Number(p.monto), 0)
     body.push([{ content: 'Total', colSpan: 4, styles: { halign: 'right', fontStyle: 'bold' } }, { content: money(total), styles: { fontStyle: 'bold', halign: 'right' } }])
 
-    doc.autoTable({
+    autoTable(doc, {
       ...tableStyles,
       startY: 45,
       head: [['Campaña', 'Plataforma', 'Objetivo', 'Fechas', 'Inversión']],

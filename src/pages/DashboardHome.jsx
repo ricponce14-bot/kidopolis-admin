@@ -7,7 +7,7 @@ import {
   Activity, Ticket, Megaphone, Calculator,
   Briefcase, AlertCircle, Download
 } from 'lucide-react'
-import { createBasePDF, tableStyles } from '../lib/pdfExport'
+import { createBasePDF, tableStyles, autoTable } from '../lib/pdfExport'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line, Legend
@@ -215,30 +215,30 @@ export default function DashboardHome() {
     const doc = createBasePDF('Reporte General del Evento')
 
     doc.setFontSize(12); doc.setFont('helvetica', 'bold'); doc.text('Resumen Financiero', 14, 45)
-    doc.autoTable({ ...tableStyles, startY: 50, head: [['Ingresos Boletos', 'Gastos Generales', 'Pauta Digital', 'Utilidad Estimada']], body: [[money(ingresosBoletos), money(totalGastos), money(totalPautas), money(utilidad)]] })
+    autoTable(doc, { ...tableStyles, startY: 50, head: [['Ingresos Boletos', 'Gastos Generales', 'Pauta Digital', 'Utilidad Estimada']], body: [[money(ingresosBoletos), money(totalGastos), money(totalPautas), money(utilidad)]] })
 
     let currentY = doc.lastAutoTable.finalY + 10
     doc.setFontSize(12); doc.setFont('helvetica', 'bold'); doc.text('Ejecución de Presupuesto Inicial', 14, currentY)
-    doc.autoTable({ ...tableStyles, startY: currentY + 5, head: [['Concepto', 'Monto']], body: [['Presupuesto Total', money(budget.total)], ['Total Gastado', money(totalEgresos)], ['Restante', money(budget.total - totalEgresos)], ['Ejecución', `${budget.total > 0 ? ((totalEgresos / budget.total)*100).toFixed(1) : 0}%`]] })
+    autoTable(doc, { ...tableStyles, startY: currentY + 5, head: [['Concepto', 'Monto']], body: [['Presupuesto Total', money(budget.total)], ['Total Gastado', money(totalEgresos)], ['Restante', money(budget.total - totalEgresos)], ['Ejecución', `${budget.total > 0 ? ((totalEgresos / budget.total)*100).toFixed(1) : 0}%`]] })
 
     currentY = doc.lastAutoTable.finalY + 10
     if (currentY > 230) { doc.addPage(); currentY = 45; }
     doc.setFontSize(12); doc.setFont('helvetica', 'bold'); doc.text('Ventas por Zona', 14, currentY)
-    doc.autoTable({ ...tableStyles, startY: currentY + 5, head: [['Zona', 'Asignados', 'Vendidos', 'Disponibles', 'Ingresos']], body: statsZonas.map(z => [z.zona, fmt(z.Vendidos + z.Disponibles), fmt(z.Vendidos), fmt(z.Disponibles), money(boletos.filter(b=>b.zona===z.zona).reduce((acc, b) => acc + (b.boletos_vendidos * b.precio_unitario), 0))]) })
+    autoTable(doc, { ...tableStyles, startY: currentY + 5, head: [['Zona', 'Asignados', 'Vendidos', 'Disponibles', 'Ingresos']], body: statsZonas.map(z => [z.zona, fmt(z.Vendidos + z.Disponibles), fmt(z.Vendidos), fmt(z.Disponibles), money(boletos.filter(b=>b.zona===z.zona).reduce((acc, b) => acc + (b.boletos_vendidos * b.precio_unitario), 0))]) })
 
     currentY = doc.lastAutoTable.finalY + 10
     if (currentY > 230) { doc.addPage(); currentY = 45; }
     doc.setFontSize(12); doc.setFont('helvetica', 'bold'); doc.text('Gastos por Categoría', 14, currentY)
     const catGastos = CATEGORIAS_GASTOS.map(cat => [cat, money(gastos.filter(g => g.categoria === cat).reduce((acc, g) => acc + Number(g.monto), 0))]).filter(row => row[1] !== '$0.00')
     catGastos.push([{ content: 'Total Gastos', styles: { fontStyle: 'bold' } }, { content: money(totalGastos), styles: { fontStyle: 'bold' } }])
-    doc.autoTable({ ...tableStyles, startY: currentY + 5, head: [['Categoría', 'Subtotal']], body: catGastos })
+    autoTable(doc, { ...tableStyles, startY: currentY + 5, head: [['Categoría', 'Subtotal']], body: catGastos })
 
     currentY = doc.lastAutoTable.finalY + 10
     if (currentY > 230) { doc.addPage(); currentY = 45; }
     doc.setFontSize(12); doc.setFont('helvetica', 'bold'); doc.text('Pauta por Plataforma', 14, currentY)
     const plats = statsPlataformas.map(p => [p.plataforma, money(p.Inversión)])
     plats.push([{ content: 'Total Pauta', styles: { fontStyle: 'bold' } }, { content: money(totalPautas), styles: { fontStyle: 'bold' } }])
-    doc.autoTable({ ...tableStyles, startY: currentY + 5, head: [['Plataforma', 'Inversión']], body: plats })
+    autoTable(doc, { ...tableStyles, startY: currentY + 5, head: [['Plataforma', 'Inversión']], body: plats })
 
     doc.save('kidopolis-reporte-general.pdf')
   }

@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Plus, Pencil, Trash2, X, Search, Ticket, Download } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { createBasePDF, tableStyles, money, fmt } from '../lib/pdfExport'
+import { createBasePDF, tableStyles, money, fmt, autoTable } from '../lib/pdfExport'
 
 const ZONAS = ['Zona A', 'Zona B', 'Zona C']
 const PRECIO_DEFAULT = { 'Zona A': 200, 'Zona B': 150, 'Zona C': 100 }
@@ -138,7 +138,7 @@ export default function TicketsPage() {
       ]
     })
 
-    doc.autoTable({
+    autoTable(doc, {
       ...tableStyles,
       startY: 45,
       head: [['Punto de Venta', 'Zona', 'Folios', 'Asignados', 'Vendidos', 'Ingresos']],
