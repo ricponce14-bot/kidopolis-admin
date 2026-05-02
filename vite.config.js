@@ -8,16 +8,6 @@ export default defineConfig({
     tailwindcss(),
   ],
   build: {
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-          charts: ['recharts'],
-          pdf: ['jspdf', 'jspdf-autotable', 'html2canvas'],
-          supabase: ['@supabase/supabase-js']
-        }
-      }
-    },
     chunkSizeWarningLimit: 1000
   }
 })
