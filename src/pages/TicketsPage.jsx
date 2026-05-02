@@ -244,7 +244,13 @@ export default function TicketsPage() {
           const punto = puntos.find(p => p.id === m.punto_venta_id)
           if (punto) stats[m.punto_venta_id].ingresos += (m.cantidad * punto.precio_unitario)
         }
-        if (m.tipo === 'devolucion') stats[m.punto_venta_id].devueltos += m.cantidad
+        if (m.tipo === 'devolucion') {
+          stats[m.punto_venta_id].devueltos += m.cantidad
+          // Reembolso: descontar del vendido y del ingreso
+          stats[m.punto_venta_id].vendidos = Math.max(0, stats[m.punto_venta_id].vendidos - m.cantidad)
+          const punto = puntos.find(p => p.id === m.punto_venta_id)
+          if (punto) stats[m.punto_venta_id].ingresos = Math.max(0, stats[m.punto_venta_id].ingresos - (m.cantidad * punto.precio_unitario))
+        }
       }
     })
     return stats

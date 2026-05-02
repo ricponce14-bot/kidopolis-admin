@@ -104,7 +104,13 @@ export default function DashboardHome() {
         ingresos += ingreso
         vendidosTotal += m.cantidad
       } else if (m.tipo === 'devolucion') {
+        // Reembolso: se descuenta del ingreso y de los vendidos
         statsMap[punto.zona].Disponibles += m.cantidad
+        statsMap[punto.zona].Vendidos = Math.max(0, statsMap[punto.zona].Vendidos - m.cantidad)
+        const reembolso = m.cantidad * Number(punto.precio_unitario)
+        statsMap[punto.zona].Ingresos = Math.max(0, statsMap[punto.zona].Ingresos - reembolso)
+        ingresos -= reembolso
+        vendidosTotal = Math.max(0, vendidosTotal - m.cantidad)
       }
     })
 
