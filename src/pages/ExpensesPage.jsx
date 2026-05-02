@@ -47,7 +47,7 @@ function GastoForm({ initial, onSave, onCancel, loading }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="col-span-2 sm:col-span-1"><label className="form-label">Concepto *</label><input className="input-field" placeholder="Ej. Renta de equipo" value={nombre} onChange={e => setNombre(e.target.value)} required /></div>
         <div className="col-span-2 sm:col-span-1"><label className="form-label">Proveedor *</label><input className="input-field" placeholder="Ej. AudioMex" value={proveedor} onChange={e => setProveedor(e.target.value)} required /></div>
         <div className="col-span-2 sm:col-span-1"><label className="form-label">Categoría *</label><select className="input-field" value={categoria} onChange={e => setCategoria(e.target.value)}>{CATEGORIAS.map(c => <option key={c} value={c}>{c}</option>)}</select></div>

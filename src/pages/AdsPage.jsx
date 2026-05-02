@@ -49,7 +49,7 @@ function PautaForm({ initial, onSave, onCancel, loading }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="col-span-2 sm:col-span-1"><label className="form-label">Plataforma *</label><select className="input-field" value={plataforma} onChange={e => setPlataforma(e.target.value)}>{PLATAFORMAS.map(p => <option key={p} value={p}>{p}</option>)}</select></div>
         <div className="col-span-2 sm:col-span-1"><label className="form-label">Nombre *</label><input className="input-field" placeholder="Ej. Preventa Fase 1" value={nombre} onChange={e => setNombre(e.target.value)} required /></div>
         <div className="col-span-2 sm:col-span-1"><label className="form-label">Objetivo *</label><select className="input-field" value={objetivo} onChange={e => setObjetivo(e.target.value)}>{OBJETIVOS.map(o => <option key={o} value={o}>{o}</option>)}</select></div>

@@ -139,7 +139,7 @@ export default function Sidebar() {
       {/* Mobile drawer */}
       {mobileOpen && (
         <div className="md:hidden fixed inset-0 z-30 flex">
-          <div className="w-72 h-full flex flex-col bg-white border-r border-gray-200 animate-fade-in">
+          <div className="w-64 sm:w-72 h-full flex flex-col bg-white border-r border-gray-200 animate-fade-in">
             <SidebarContent />
           </div>
           <div className="flex-1 bg-slate-900/20 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />

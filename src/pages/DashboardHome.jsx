@@ -93,7 +93,7 @@ function BudgetCard({ budget, totalEgresos }) {
           <Link to="/dashboard/budget" className="text-[10px] font-bold text-slate-400 uppercase hover:text-slate-800">Ver Módulo →</Link>
         </div>
         
-        <div className="grid grid-cols-3 gap-4 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
           <div>
             <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-1">Presupuesto</p>
             <p className="text-xl font-bold text-slate-900 cursor-pointer hover:underline"><Link to="/dashboard/budget">{money(total)}</Link></p>

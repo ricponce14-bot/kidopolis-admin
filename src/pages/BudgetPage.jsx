@@ -69,7 +69,7 @@ function BudgetForm({ initial, onSave, onCancel, loading }) {
       </div>
       
       <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Asignación por Categorías</p>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div><label className="form-label">Producción</label><input className="input-field" type="number" min="0" step="0.01" value={produccion} onChange={e => setProduccion(e.target.value)} /></div>
         <div><label className="form-label">Logística</label><input className="input-field" type="number" min="0" step="0.01" value={logistica} onChange={e => setLogistica(e.target.value)} /></div>
         <div><label className="form-label">Personal</label><input className="input-field" type="number" min="0" step="0.01" value={personal} onChange={e => setPersonal(e.target.value)} /></div>

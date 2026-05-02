@@ -51,13 +51,13 @@ function PuntoForm({ initial, onSave, onCancel, loading }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="col-span-2"><label className="form-label">Punto de venta *</label><input className="input-field" value={nombre} onChange={e => setNombre(e.target.value)} required placeholder="Ej. Taquilla Sur" /></div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="sm:col-span-2"><label className="form-label">Punto de venta *</label><input className="input-field" value={nombre} onChange={e => setNombre(e.target.value)} required placeholder="Ej. Taquilla Sur" /></div>
         <div><label className="form-label">Zona *</label><select className="input-field" value={zona} onChange={e => handleZona(e.target.value)}>{ZONAS.map(z => <option key={z} value={z}>{z}</option>)}</select></div>
         <div><label className="form-label">Precio ($ MXN) *</label><input className="input-field" type="number" min="0" step="0.01" value={precio} onChange={e => setPrecio(e.target.value)} required /></div>
         <div><label className="form-label">Folio inicial *</label><input className="input-field" type="number" min="1" value={folioIni} onChange={e => setFolioIni(e.target.value)} required /></div>
         <div><label className="form-label">Folio final *</label><input className="input-field" type="number" min="1" value={folioFin} onChange={e => setFolioFin(e.target.value)} required /></div>
-        <div className="col-span-2"><label className="form-label">Boletos vendidos</label><input className="input-field" type="number" min="0" max={asignados || undefined} value={vendidos} onChange={e => setVendidos(e.target.value)} /></div>
+        <div className="sm:col-span-2"><label className="form-label">Boletos vendidos</label><input className="input-field" type="number" min="0" max={asignados || undefined} value={vendidos} onChange={e => setVendidos(e.target.value)} /></div>
       </div>
       {asignados > 0 && (
         <div className="grid grid-cols-3 gap-3 p-3 bg-slate-50 border border-slate-200 rounded text-center mt-2">
