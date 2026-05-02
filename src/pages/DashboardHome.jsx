@@ -130,6 +130,7 @@ export default function DashboardHome() {
   
   const [budget, setBudget]   = useState(null)
   const [boletos, setBoletos] = useState([])
+  const [movimientos, setMovimientos] = useState([])
   const [gastos, setGastos]   = useState([])
   const [pautas, setPautas]   = useState([])
 
@@ -141,17 +142,20 @@ export default function DashboardHome() {
       const [resBudget, resBoletos, resGastos, resPautas] = await Promise.all([
         supabase.from('presupuesto_general').select('*').eq('id', 1).single(),
         supabase.from('puntos_venta').select('*'),
+        supabase.from('movimientos_folios').select('*'),
         supabase.from('gastos').select('*'),
         supabase.from('pautas').select('*')
       ])
 
       if (resBudget.error && resBudget.error.code !== 'PGRST116') throw resBudget.error
       if (resBoletos.error) throw resBoletos.error
+      if (resMovs.error && resMovs.error.code !== '42P01') console.error('Movimientos no existen aún')
       if (resGastos.error) throw resGastos.error
       if (resPautas.error) throw resPautas.error
 
       setBudget(resBudget.data || { total: 0, produccion: 0, logistica: 0, personal: 0, venue: 0, pauta: 0, otros: 0 })
       setBoletos(resBoletos.data || [])
+      setMovimientos(resMovs.data || [])
       setGastos(resGastos.data || [])
       setPautas(resPautas.data || [])
     } catch (err) {
@@ -164,23 +168,36 @@ export default function DashboardHome() {
   useEffect(() => { loadData() }, [])
 
   // ─── Cálculos ───
-  const ingresosBoletos = useMemo(() => 
-    boletos.reduce((acc, b) => acc + (Number(b.boletos_vendidos) * Number(b.precio_unitario)), 0)
-  , [boletos])
+  const { ingresosBoletos, statsZonas } = useMemo(() => {
+    let ingresos = 0
+    const statsMap = {}
+    ZONAS.forEach(z => { statsMap[z] = { zona: z, Vendidos: 0, Disponibles: 0 } })
 
-  const statsZonas = useMemo(() => {
-    return ZONAS.map(zona => {
-      const puntosZona = boletos.filter(b => b.zona === zona)
-      const asignados = puntosZona.reduce((acc, p) => acc + (p.folio_final - p.folio_inicial + 1), 0)
-      const vendidos = puntosZona.reduce((acc, p) => acc + Number(p.boletos_vendidos), 0)
-      const disponibles = asignados - vendidos
-      return { zona, Vendidos: vendidos, Disponibles: disponibles }
+    // Inicializar Disponibles (restar de un máximo teórico si se quisiera, pero como el Mapeo usa TOTAL_FOLIOS...)
+    const TOTAL_FOLIOS = { 'Zona Kids': 2000, 'Zona Pop': 600, 'Zona Mágica': 400 }
+
+    movimientos.forEach(m => {
+      const punto = boletos.find(p => p.id === m.punto_venta_id)
+      if (!punto || !statsMap[punto.zona]) return
+
+      if (m.tipo === 'asignacion') {
+        statsMap[punto.zona].Disponibles += m.cantidad
+      } else if (m.tipo === 'venta') {
+        statsMap[punto.zona].Vendidos += m.cantidad
+        statsMap[punto.zona].Disponibles = Math.max(0, statsMap[punto.zona].Disponibles - m.cantidad)
+        ingresos += (m.cantidad * punto.precio_unitario)
+      } else if (m.tipo === 'devolucion') {
+        statsMap[punto.zona].Disponibles += m.cantidad
+      }
     })
-  }, [boletos])
+
+    return { ingresosBoletos: ingresos, statsZonas: Object.values(statsMap) }
+  }, [boletos, movimientos])
 
   const ticketTotals = useMemo(() => {
     const ven = statsZonas.reduce((a, b) => a + b.Vendidos, 0)
     const disp = statsZonas.reduce((a, b) => a + b.Disponibles, 0)
+    if (ven === 0 && disp === 0) return [{ name: 'Sin registros', value: 1, fill: '#f1f5f9' }] // Evita crash en Recharts
     return [{ name: 'Vendidos', value: ven }, { name: 'Disponibles', value: disp }]
   }, [statsZonas])
 
@@ -224,7 +241,7 @@ export default function DashboardHome() {
     currentY = doc.lastAutoTable.finalY + 10
     if (currentY > 230) { doc.addPage(); currentY = 45; }
     doc.setFontSize(12); doc.setFont('helvetica', 'bold'); doc.text('Ventas por Zona', 14, currentY)
-    autoTable(doc, { ...tableStyles, startY: currentY + 5, head: [['Zona', 'Asignados', 'Vendidos', 'Disponibles', 'Ingresos']], body: statsZonas.map(z => [z.zona, fmt(z.Vendidos + z.Disponibles), fmt(z.Vendidos), fmt(z.Disponibles), money(boletos.filter(b=>b.zona===z.zona).reduce((acc, b) => acc + (b.boletos_vendidos * b.precio_unitario), 0))]) })
+    autoTable(doc, { ...tableStyles, startY: currentY + 5, head: [['Zona', 'Vendidos', 'Disponibles', 'Ingresos Estimados']], body: statsZonas.map(z => [z.zona, fmt(z.Vendidos), fmt(z.Disponibles), money(boletos.filter(b=>b.zona===z.zona).reduce((acc, b) => acc + (z.Vendidos * b.precio_unitario), 0))]) })
 
     currentY = doc.lastAutoTable.finalY + 10
     if (currentY > 230) { doc.addPage(); currentY = 45; }
