@@ -9,6 +9,7 @@ export default function ProtectedRoute({ requiredRole }) {
   const { user, role, loading } = useAuth()
 
   if (loading) {
+    console.log('ProtectedRoute: STILL LOADING');
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50">
         <div className="spinner mb-4" style={{ width: '2.5rem', height: '2.5rem' }} />
@@ -19,6 +20,7 @@ export default function ProtectedRoute({ requiredRole }) {
       </div>
     )
   }
+  console.log('ProtectedRoute: LOADING FINISHED, User:', !!user);
 
   if (!user) {
     return <Navigate to="/login" replace />
