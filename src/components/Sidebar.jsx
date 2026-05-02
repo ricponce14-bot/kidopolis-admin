@@ -52,13 +52,22 @@ export default function Sidebar() {
   const SidebarContent = () => (
     <div className="flex flex-col h-full bg-white">
       {/* Logo */}
-      <div className="p-6 border-b border-gray-100">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded flex items-center justify-center bg-slate-900">
-             <span className="text-white font-bold text-xs">K</span>
+      <div className="p-6 border-b border-gray-100/80">
+        <div className="flex items-center gap-3">
+          <img 
+            src="/logo.png" 
+            alt="KidoPolis" 
+            className="h-7 w-auto object-contain"
+            onError={(e) => {
+              e.target.style.display = 'none';
+              document.getElementById('sidebar-fallback-logo').style.display = 'flex';
+            }}
+          />
+          <div id="sidebar-fallback-logo" className="w-7 h-7 rounded-lg flex items-center justify-center bg-slate-900 shadow-sm hidden">
+             <span className="text-white font-bold text-sm">K</span>
           </div>
           <div>
-            <p className="font-bold text-sm text-slate-900 tracking-tight">KidoPolis</p>
+            <p className="font-bold text-[15px] text-slate-900 tracking-tight">KidoPolis</p>
           </div>
         </div>
       </div>
@@ -119,12 +128,21 @@ export default function Sidebar() {
       </aside>
 
       {/* Mobile top bar */}
-      <div className="md:hidden flex items-center justify-between px-4 py-3 sticky top-0 z-40 border-b border-gray-200 bg-white">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded flex items-center justify-center bg-slate-900">
+      <div className="md:hidden flex items-center justify-between px-5 py-3.5 sticky top-0 z-40 border-b border-gray-200/80 bg-white/80 backdrop-blur-md">
+        <div className="flex items-center gap-2.5">
+          <img 
+            src="/logo.png" 
+            alt="KidoPolis" 
+            className="h-6 w-auto object-contain"
+            onError={(e) => {
+              e.target.style.display = 'none';
+              document.getElementById('mobile-fallback-logo').style.display = 'flex';
+            }}
+          />
+          <div id="mobile-fallback-logo" className="w-6 h-6 rounded flex items-center justify-center bg-slate-900 hidden">
              <span className="text-white font-bold text-xs">K</span>
           </div>
-          <span className="font-bold text-sm tracking-tight text-slate-900">
+          <span className="font-bold text-[15px] tracking-tight text-slate-900">
             KidoPolis
           </span>
         </div>
