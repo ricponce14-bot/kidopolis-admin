@@ -139,7 +139,7 @@ export default function DashboardHome() {
     setError(null)
     
     try {
-      const [resBudget, resBoletos, resGastos, resPautas] = await Promise.all([
+      const [resBudget, resBoletos, resMovs, resGastos, resPautas] = await Promise.all([
         supabase.from('presupuesto_general').select('*').eq('id', 1).single(),
         supabase.from('puntos_venta').select('*'),
         supabase.from('movimientos_folios').select('*'),
