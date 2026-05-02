@@ -7,9 +7,9 @@
 create table if not exists public.puntos_venta (
   id            uuid primary key default gen_random_uuid(),
   nombre        text not null,
-  zona          text not null check (zona in ('Zona A', 'Zona B', 'Zona C')),
-  folio_inicial integer not null check (folio_inicial > 0),
-  folio_final   integer not null check (folio_final >= folio_inicial),
+  zona          text not null check (zona in ('Zona Kids', 'Zona Pop', 'Zona Mágica')),
+  folio_inicial integer not null default 1 check (folio_inicial > 0),
+  folio_final   integer not null default 1 check (folio_final >= folio_inicial),
   boletos_vendidos integer not null default 0 check (boletos_vendidos >= 0),
   precio_unitario  numeric(10,2) not null default 0 check (precio_unitario >= 0),
   created_at    timestamptz default now(),
@@ -62,11 +62,3 @@ create policy "Admins can delete puntos_venta"
       where id = auth.uid() and role = 'admin'
     )
   );
-
--- 4. Datos de ejemplo
-insert into public.puntos_venta (nombre, zona, folio_inicial, folio_final, boletos_vendidos, precio_unitario) values
-  ('Tienda de Juan',    'Zona A', 1,   50,  12, 200.00),
-  ('Papelería Central', 'Zona B', 51,  100, 8,  150.00),
-  ('Farmacia López',   'Zona C', 101, 150, 20, 100.00),
-  ('Abarrotes Pepe',   'Zona A', 151, 200, 5,  200.00),
-  ('Mini Super Norte', 'Zona B', 201, 250, 0,  150.00);

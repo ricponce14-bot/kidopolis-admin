@@ -16,7 +16,7 @@ import {
 function money(n) { return `$${Number(n ?? 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` }
 function fmt(n) { return Number(n ?? 0).toLocaleString('es-MX') }
 
-const ZONAS = ['Zona A', 'Zona B', 'Zona C']
+const ZONAS = ['Zona Kids', 'Zona Pop', 'Zona Mágica']
 const PLATAFORMAS = ['Meta', 'Google', 'TikTok', 'Instagram', 'Otra']
 const CATEGORIAS_GASTOS = ['Producción', 'Logística', 'Personal', 'Venue', 'Otro']
 
