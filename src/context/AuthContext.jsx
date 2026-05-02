@@ -25,12 +25,19 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     // Get initial session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data, error }) => {
+      const session = data?.session;
+      if (error) {
+        console.error('Supabase Auth Error:', error.message)
+      }
       if (session?.user) {
         setUser(session.user)
         const r = await fetchRole(session.user.id)
         setRole(r)
       }
+      setLoading(false)
+    }).catch(err => {
+      console.error('Unexpected Auth Error:', err)
       setLoading(false)
     })
 
