@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { supabase, isConfigValid } from '../lib/supabase'
 
 const AuthContext = createContext(null)
 
@@ -26,48 +26,38 @@ export function AuthProvider({ children }) {
   }
 
   useEffect(() => {
+    if (!isConfigValid) {
+      setLoading(false);
+      return;
+    }
+
     let mounted = true;
     
-    // Safety timeout: if auth doesn't resolve in 10s, stop loading
-    const timer = setTimeout(() => {
-      if (mounted) {
-        console.warn('Auth timeout reached');
-        setLoading(false);
-      }
-    }, 10000);
-
     // Get initial session
     supabase.auth.getSession().then(async ({ data, error }) => {
       if (!mounted) return;
       
       try {
         const session = data?.session;
-        if (error) console.error('Supabase getSession error:', error.message);
-        
         if (session?.user) {
           setUser(session.user)
           const r = await fetchRole(session.user.id)
           setRole(r)
         }
       } catch (e) {
-        console.error('Error in auth initialization:', e);
+        console.error('Auth initialization error:', e);
       } finally {
-        clearTimeout(timer);
-        setLoading(false);
+        setLoading(false)
       }
     }).catch(err => {
       console.error('Failed to get session:', err);
-      if (mounted) {
-        clearTimeout(timer);
-        setLoading(false);
-      }
+      if (mounted) setLoading(false);
     })
 
     // Listen for auth state changes
     const authRes = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!mounted) return;
-        
         if (session?.user) {
           setUser(session.user)
           const r = await fetchRole(session.user.id)
@@ -84,12 +74,12 @@ export function AuthProvider({ children }) {
 
     return () => {
       mounted = false;
-      clearTimeout(timer);
       if (subscription?.unsubscribe) subscription.unsubscribe();
     }
   }, [])
 
   async function signIn(email, password) {
+    if (!isConfigValid) throw new Error('Supabase configuration is invalid. Please check your environment variables.');
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) throw error
     return data
@@ -102,8 +92,17 @@ export function AuthProvider({ children }) {
   const isAdmin = role === 'admin'
   const isVisor = role === 'visor'
 
+  if (!isConfigValid && !loading) {
+    return (
+      <div style={{ padding: '2rem', textAlign: 'center', color: 'red' }}>
+        <h1>Configuration Error</h1>
+        <p>Supabase environment variables (VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY) are missing or invalid.</p>
+      </div>
+    );
+  }
+
   return (
-    <AuthContext.Provider value={{ user, role, loading, isAdmin, isVisor, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, role, loading, isAdmin, isVisor, signIn, signOut, isConfigValid }}>
       {children}
     </AuthContext.Provider>
   )
