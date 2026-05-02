@@ -24,26 +24,48 @@ export function AuthProvider({ children }) {
   }
 
   useEffect(() => {
+    let mounted = true;
+    
+    // Safety timeout: if auth doesn't resolve in 10s, stop loading
+    const timer = setTimeout(() => {
+      if (mounted) {
+        console.warn('Auth timeout reached');
+        setLoading(false);
+      }
+    }, 10000);
+
     // Get initial session
     supabase.auth.getSession().then(async ({ data, error }) => {
-      const session = data?.session;
-      if (error) {
-        console.error('Supabase Auth Error:', error.message)
+      if (!mounted) return;
+      
+      try {
+        const session = data?.session;
+        if (error) console.error('Supabase getSession error:', error.message);
+        
+        if (session?.user) {
+          setUser(session.user)
+          const r = await fetchRole(session.user.id)
+          setRole(r)
+        }
+      } catch (e) {
+        console.error('Error in auth initialization:', e);
+      } finally {
+        clearTimeout(timer);
+        setLoading(false);
       }
-      if (session?.user) {
-        setUser(session.user)
-        const r = await fetchRole(session.user.id)
-        setRole(r)
-      }
-      setLoading(false)
     }).catch(err => {
-      console.error('Unexpected Auth Error:', err)
-      setLoading(false)
+      console.error('Failed to get session:', err);
+      if (mounted) {
+        clearTimeout(timer);
+        setLoading(false);
+      }
     })
 
     // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    const authRes = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        if (!mounted) return;
+        
         if (session?.user) {
           setUser(session.user)
           const r = await fetchRole(session.user.id)
@@ -56,7 +78,13 @@ export function AuthProvider({ children }) {
       }
     )
 
-    return () => subscription.unsubscribe()
+    const subscription = authRes?.data?.subscription || authRes?.subscription;
+
+    return () => {
+      mounted = false;
+      clearTimeout(timer);
+      if (subscription?.unsubscribe) subscription.unsubscribe();
+    }
   }, [])
 
   async function signIn(email, password) {

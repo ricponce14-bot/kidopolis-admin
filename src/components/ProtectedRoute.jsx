@@ -10,8 +10,12 @@ export default function ProtectedRoute({ requiredRole }) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="spinner" style={{ width: '2.5rem', height: '2.5rem' }} />
+      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50">
+        <div className="spinner mb-4" style={{ width: '2.5rem', height: '2.5rem' }} />
+        <p className="text-sm text-slate-400 animate-pulse">Conectando con KidoPolis...</p>
+        <div className="mt-8 text-[10px] text-slate-300 max-w-xs text-center">
+          Si esto tarda demasiado, revisa la consola del navegador (F12) o verifica tus credenciales de Supabase en Vercel.
+        </div>
       </div>
     )
   }
