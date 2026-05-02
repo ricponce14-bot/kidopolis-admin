@@ -1,10 +1,5 @@
 import jsPDF from 'jspdf'
-import autoTable from 'jspdf-autotable'
-
-// Ensure autoTable is attached to the jsPDF prototype (fixes Vite 8 build issues)
-jsPDF.API.autoTable = function (...args) {
-  return autoTable(this, ...args)
-}
+import 'jspdf-autotable'
 
 export function money(n) {
   return `$${Number(n ?? 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
