@@ -35,8 +35,17 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-[400px]">
         {/* Header */}
-        <div className="flex flex-col items-center mb-8">
-          <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-slate-900 mb-4 shadow-sm">
+        <div className="flex flex-col items-center mb-8 text-center">
+          <img 
+            src="/logo.png" 
+            alt="KidoPolis" 
+            className="h-16 w-auto mb-4 object-contain"
+            onError={(e) => {
+              e.target.style.display = 'none';
+              document.getElementById('fallback-logo').style.display = 'flex';
+            }}
+          />
+          <div id="fallback-logo" className="w-12 h-12 rounded-lg flex items-center justify-center bg-slate-900 mb-4 shadow-sm hidden">
              <span className="text-white font-bold text-xl">K</span>
           </div>
           <h1 className="text-xl font-bold tracking-tight">KidoPolis</h1>
