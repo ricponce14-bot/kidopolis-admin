@@ -16,9 +16,9 @@ function fmtDateLocal(d) {
 
 function Modal({ title, onClose, children }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center md:p-4 mobile-fullscreen-modal-container">
       <div className="absolute inset-0 bg-slate-900/20 backdrop-blur-sm" onClick={onClose} />
-      <div className="bg-white rounded-lg border border-gray-200 shadow-xl relative w-full max-w-lg p-6 animate-fade-in z-10">
+      <div className="bg-white rounded-lg border border-gray-200 shadow-xl relative w-full max-w-lg p-6 animate-fade-in z-10 mobile-fullscreen-modal overflow-y-auto">
         <div className="flex items-center justify-between mb-5">
           <h2 className="font-bold text-lg text-slate-900">{title}</h2>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors"><X size={20} /></button>
@@ -175,7 +175,7 @@ export default function ExpensesPage() {
         </div>
       ) : (
         <div className="glass-card overflow-hidden">
-          <table className="w-full text-sm text-left">
+          <table className="w-full text-sm text-left responsive-table">
             <thead className="bg-slate-50 border-b border-gray-200 text-slate-500 text-xs uppercase tracking-wider font-semibold">
               <tr>
                 <th className="px-5 py-3">Concepto</th>
@@ -189,16 +189,16 @@ export default function ExpensesPage() {
             <tbody className="divide-y divide-gray-100">
               {filtered.map(g => (
                 <tr key={g.id} className="hover:bg-slate-50 group transition-colors">
-                  <td className="px-5 py-3 font-medium text-slate-900">{g.nombre}</td>
-                  <td className="px-5 py-3 text-slate-600">{g.proveedor}</td>
-                  <td className="px-5 py-3">
+                  <td data-label="Concepto" className="px-5 py-3 font-medium text-slate-900">{g.nombre}</td>
+                  <td data-label="Proveedor" className="px-5 py-3 text-slate-600">{g.proveedor}</td>
+                  <td data-label="Categoría" className="px-5 py-3">
                     <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border border-slate-200">{g.categoria}</span>
                   </td>
-                  <td className="px-5 py-3 text-slate-500 text-xs tabular-nums">{fmtDateLocal(g.fecha)}</td>
-                  <td className="px-5 py-3 text-right font-bold text-slate-900 tabular-nums">{money(g.monto)}</td>
+                  <td data-label="Fecha" className="px-5 py-3 text-slate-500 text-xs tabular-nums">{fmtDateLocal(g.fecha)}</td>
+                  <td data-label="Monto (MXN)" className="px-5 py-3 text-right font-bold text-slate-900 tabular-nums">{money(g.monto)}</td>
                   {isAdmin && (
-                    <td className="px-5 py-3 text-right">
-                      <div className="flex justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <td data-label="Acciones" className="px-5 py-3 text-right">
+                      <div className="flex justify-end gap-1.5 md:opacity-0 group-hover:opacity-100 transition-opacity">
                         <button className="btn-edit !p-1.5" onClick={() => { setSelected(g); setModalMode('edit') }} title="Editar"><Pencil size={14} /></button>
                         <button className="btn-danger !p-1.5 hover:bg-red-50 hover:text-red-600 hover:border-red-200" onClick={() => handleDelete(g.id)} title="Eliminar"><Trash2 size={14} /></button>
                       </div>

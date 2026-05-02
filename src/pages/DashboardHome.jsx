@@ -65,7 +65,7 @@ function ProfitCard({ profit }) {
     <div className={`p-6 rounded-lg border ${borderClass} ${bgClass} flex items-center justify-between animate-fade-in h-full`}>
       <div>
         <p className="text-xs font-semibold uppercase tracking-wider mb-1 text-slate-600">Utilidad Estimada</p>
-        <p className={`text-4xl font-bold tracking-tight ${colorClass}`}>{money(profit)}</p>
+        <p className={`text-3xl sm:text-4xl font-bold tracking-tight ${colorClass}`}>{money(profit)}</p>
         <p className="text-xs mt-1 text-slate-600 font-medium">Ingresos totales por boletos menos total de egresos reales</p>
       </div>
       <div className={`w-14 h-14 rounded-full flex items-center justify-center bg-white border ${borderClass} shadow-sm hidden sm:flex`}>
@@ -321,7 +321,7 @@ export default function DashboardHome() {
 
         {/* FINANZAS */}
         <div className="space-y-6">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <StatCard icon={Package} label="Gastos Grales." value={money(totalGastos)} to="/dashboard/expenses" />
             <StatCard icon={Megaphone} label="Pauta Digital" value={money(totalPautas)} to="/dashboard/ads" />
           </div>
