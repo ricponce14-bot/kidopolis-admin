@@ -5,8 +5,8 @@ import { Plus, Pencil, Trash2, X, Search, Ticket, Download } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { createBasePDF, tableStyles, money, fmt, autoTable } from '../lib/pdfExport'
 
-const ZONAS = ['Zona A', 'Zona B', 'Zona C']
-const PRECIO_DEFAULT = { 'Zona A': 200, 'Zona B': 150, 'Zona C': 100 }
+const ZONAS = ['Zona Kids', 'Zona Pop', 'Zona Mágica']
+const PRECIO_DEFAULT = { 'Zona Kids': 200, 'Zona Pop': 350, 'Zona Mágica': 450 }
 
 function Modal({ title, onClose, children }) {
   return (
@@ -25,11 +25,11 @@ function Modal({ title, onClose, children }) {
 
 function PuntoForm({ initial, onSave, onCancel, loading }) {
   const [nombre, setNombre] = useState(initial?.nombre ?? '')
-  const [zona, setZona] = useState(initial?.zona ?? 'Zona A')
+  const [zona, setZona] = useState(initial?.zona ?? 'Zona Kids')
   const [folioIni, setFolioIni] = useState(initial?.folio_inicial ?? '')
   const [folioFin, setFolioFin] = useState(initial?.folio_final ?? '')
   const [vendidos, setVendidos] = useState(initial?.boletos_vendidos ?? 0)
-  const [precio, setPrecio] = useState(initial?.precio_unitario ?? PRECIO_DEFAULT['Zona A'])
+  const [precio, setPrecio] = useState(initial?.precio_unitario ?? PRECIO_DEFAULT['Zona Kids'])
 
   function handleZona(z) {
     setZona(z)
