@@ -147,11 +147,11 @@ export default function DashboardHome() {
         supabase.from('pautas').select('*')
       ])
 
-      if (resBudget.error && resBudget.error.code !== 'PGRST116') throw resBudget.error
-      if (resBoletos.error) throw resBoletos.error
-      if (resMovs.error && resMovs.error.code !== '42P01') console.error('Movimientos no existen aún')
-      if (resGastos.error) throw resGastos.error
-      if (resPautas.error) throw resPautas.error
+      if (resBudget.error && resBudget.error.code !== 'PGRST116') console.warn('Budget error:', resBudget.error.message)
+      if (resBoletos.error) console.warn('Boletos error:', resBoletos.error.message)
+      if (resMovs.error) console.warn('Movimientos error:', resMovs.error.message)
+      if (resGastos.error) console.warn('Gastos error:', resGastos.error.message)
+      if (resPautas.error) console.warn('Pautas error:', resPautas.error.message)
 
       setBudget(resBudget.data || { total: 0, produccion: 0, logistica: 0, personal: 0, venue: 0, pauta: 0, otros: 0 })
       setBoletos(resBoletos.data || [])
@@ -159,7 +159,8 @@ export default function DashboardHome() {
       setGastos(resGastos.data || [])
       setPautas(resPautas.data || [])
     } catch (err) {
-      setError(err.message)
+      console.error('Dashboard loadData failed:', err)
+      setError(err.message || 'Error al cargar datos')
     } finally {
       setLoading(false)
     }
@@ -172,9 +173,6 @@ export default function DashboardHome() {
     let ingresos = 0
     const statsMap = {}
     ZONAS.forEach(z => { statsMap[z] = { zona: z, Vendidos: 0, Disponibles: 0 } })
-
-    // Inicializar Disponibles (restar de un máximo teórico si se quisiera, pero como el Mapeo usa TOTAL_FOLIOS...)
-    const TOTAL_FOLIOS = { 'Zona Kids': 2000, 'Zona Pop': 600, 'Zona Mágica': 400 }
 
     movimientos.forEach(m => {
       const punto = boletos.find(p => p.id === m.punto_venta_id)
@@ -236,7 +234,7 @@ export default function DashboardHome() {
 
     let currentY = doc.lastAutoTable.finalY + 10
     doc.setFontSize(12); doc.setFont('helvetica', 'bold'); doc.text('Ejecución de Presupuesto Inicial', 14, currentY)
-    autoTable(doc, { ...tableStyles, startY: currentY + 5, head: [['Concepto', 'Monto']], body: [['Presupuesto Total', money(budget.total)], ['Total Gastado', money(totalEgresos)], ['Restante', money(budget.total - totalEgresos)], ['Ejecución', `${budget.total > 0 ? ((totalEgresos / budget.total)*100).toFixed(1) : 0}%`]] })
+    autoTable(doc, { ...tableStyles, startY: currentY + 5, head: [['Concepto', 'Monto']], body: [['Presupuesto Total', money(budget?.total ?? 0)], ['Total Gastado', money(totalEgresos)], ['Restante', money((budget?.total ?? 0) - totalEgresos)], ['Ejecución', `${(budget?.total ?? 0) > 0 ? ((totalEgresos / budget.total)*100).toFixed(1) : 0}%`]] })
 
     currentY = doc.lastAutoTable.finalY + 10
     if (currentY > 230) { doc.addPage(); currentY = 45; }
