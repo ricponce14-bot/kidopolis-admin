@@ -3,11 +3,12 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { ZONAS, ZONA_CONFIG, validateFolio, precioZona, totalBoletos, money, fmt, folioEjemplo } from '../lib/ticketHelpers'
 import PanelConteo from '../components/PanelConteo'
-import { Plus, X, Search, Ticket, Download, Ban, ShoppingCart, Globe } from 'lucide-react'
+import { Plus, X, Search, Ticket, Download, Ban, ShoppingCart, Globe, Map, Settings2, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
-/* ─── Puntos de Venta fijos (se pueden ampliar) ─── */
-const PUNTOS_VENTA = ['Taquilla 1', 'Taquilla 2', 'Taquilla 3', 'Taquilla 4', 'Taquilla 5']
+const DEFAULT_PUNTOS = ['Taquilla 1', 'Taquilla 2', 'Taquilla 3', 'Taquilla 4', 'Taquilla 5']
+function loadPuntos() { try { const s = localStorage.getItem('kidopolis_puntos'); return s ? JSON.parse(s) : DEFAULT_PUNTOS } catch { return DEFAULT_PUNTOS } }
+function savePuntos(p) { localStorage.setItem('kidopolis_puntos', JSON.stringify(p)) }
 
 function Modal({ title, onClose, children }) {
   return (
@@ -25,8 +26,8 @@ function Modal({ title, onClose, children }) {
 }
 
 /* ─── Formulario de Venta ─── */
-function VentaForm({ ventas, onSave, onCancel, loading }) {
-  const [punto, setPunto] = useState(PUNTOS_VENTA[0])
+function VentaForm({ ventas, puntos, onSave, onCancel, loading }) {
+  const [punto, setPunto] = useState(puntos[0] || '')
   const [zona, setZona] = useState(ZONAS[0])
   const [folio, setFolio] = useState('')
 
@@ -48,7 +49,7 @@ function VentaForm({ ventas, onSave, onCancel, loading }) {
       <div>
         <label className="form-label">Punto de Venta *</label>
         <select className="input-field" value={punto} onChange={e => setPunto(e.target.value)}>
-          {PUNTOS_VENTA.map(p => <option key={p} value={p}>{p}</option>)}
+          {puntos.map(p => <option key={p} value={p}>{p}</option>)}
         </select>
       </div>
       <div>
@@ -172,9 +173,27 @@ export default function TicketsPage() {
   const [search, setSearch] = useState('')
   const [zonaFilter, setZonaFilter] = useState('Todas')
   const [puntoFilter, setPuntoFilter] = useState('Todos')
-  const [modalMode, setModalMode] = useState(null) // 'venta' | 'tikzet' | 'cancelar'
+  const [modalMode, setModalMode] = useState(null)
   const [selectedVenta, setSelectedVenta] = useState(null)
-  const [activeTab, setActiveTab] = useState('ventas') // 'ventas' | 'tikzet'
+  const [activeTab, setActiveTab] = useState('ventas')
+  const [puntosVenta, setPuntosVenta] = useState(loadPuntos())
+  const [newPunto, setNewPunto] = useState('')
+  const [mapeoPage, setMapeoPage] = useState(0)
+  const MAPEO_PER_PAGE = 50
+
+  function addPunto() {
+    const name = newPunto.trim()
+    if (!name) return toast.error('Escribe un nombre')
+    if (puntosVenta.includes(name)) return toast.error('Ya existe')
+    const updated = [...puntosVenta, name]
+    setPuntosVenta(updated); savePuntos(updated); setNewPunto('')
+    toast.success(`Punto "${name}" agregado`)
+  }
+  function removePunto(name) {
+    const updated = puntosVenta.filter(p => p !== name)
+    setPuntosVenta(updated); savePuntos(updated)
+    toast.success(`Punto "${name}" eliminado`)
+  }
 
   async function load() {
     setLoading(true)
@@ -234,10 +253,26 @@ export default function TicketsPage() {
     setSaving(false); setModalMode(null); setSelectedVenta(null)
   }
 
-  // Stats rápidos
   const totalVendidos = ventas.filter(v => v.estado === 'vendido').length
   const totalCancelados = ventas.filter(v => v.estado === 'cancelado').length
   const totalDinero = ventas.filter(v => v.estado === 'vendido').reduce((a, v) => a + precioZona(v.zona), 0)
+
+  // Mapeo de folios
+  const mapeoData = useMemo(() => {
+    const rows = []
+    ZONAS.forEach(z => {
+      const config = ZONA_CONFIG[z]
+      for (let i = config.min; i <= config.max; i++) {
+        const folio = config.prefix + String(i).padStart(config.prefix ? 3 : 4, '0')
+        const venta = ventas.find(v => v.folio === folio && v.zona === z)
+        rows.push({ folio, zona: z, punto: venta?.punto_venta || '—', estado: venta ? venta.estado : 'disponible', fecha: venta?.fecha_venta })
+      }
+    })
+    if (zonaFilter !== 'Todas') return rows.filter(r => r.zona === zonaFilter)
+    return rows
+  }, [ventas, zonaFilter])
+  const mapeoSlice = mapeoData.slice(mapeoPage * MAPEO_PER_PAGE, (mapeoPage + 1) * MAPEO_PER_PAGE)
+  const mapeoPages = Math.ceil(mapeoData.length / MAPEO_PER_PAGE)
 
   return (
     <div className="space-y-6">
@@ -251,6 +286,7 @@ export default function TicketsPage() {
           <p className="text-sm mt-1 text-slate-500">Registro de ventas por folio, cancelaciones y Tikzet.</p>
         </div>
         <div className="flex gap-2 flex-wrap">
+          {isAdmin && <button className="btn-secondary" onClick={() => setModalMode('puntos')}><Settings2 size={16} /> Puntos</button>}
           <button className="btn-secondary" onClick={() => setModalMode('tikzet')}><Globe size={16} /> Tikzet</button>
           <button className="btn-primary" onClick={() => setModalMode('venta')}><Plus size={16} /> Registrar Venta</button>
         </div>
@@ -276,15 +312,13 @@ export default function TicketsPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-gray-200 gap-6">
-        <button onClick={() => setActiveTab('ventas')} className={`pb-3 text-sm font-medium transition-colors relative ${activeTab === 'ventas' ? 'text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}>
-          <span className="flex items-center gap-2"><ShoppingCart size={16} /> Ventas ({ventas.length})</span>
-          {activeTab === 'ventas' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-slate-900 rounded-t-full" />}
-        </button>
-        <button onClick={() => setActiveTab('tikzet')} className={`pb-3 text-sm font-medium transition-colors relative ${activeTab === 'tikzet' ? 'text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}>
-          <span className="flex items-center gap-2"><Globe size={16} /> Tikzet ({ventasTikzet.length})</span>
-          {activeTab === 'tikzet' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-slate-900 rounded-t-full" />}
-        </button>
+      <div className="flex border-b border-gray-200 gap-6 overflow-x-auto">
+        {[{id:'ventas',icon:ShoppingCart,label:`Ventas (${ventas.length})`},{id:'tikzet',icon:Globe,label:`Tikzet (${ventasTikzet.length})`},{id:'mapeo',icon:Map,label:'Mapeo'}].map(t => (
+          <button key={t.id} onClick={() => { setActiveTab(t.id); setMapeoPage(0) }} className={`pb-3 text-sm font-medium transition-colors relative whitespace-nowrap ${activeTab === t.id ? 'text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}>
+            <span className="flex items-center gap-2"><t.icon size={16} /> {t.label}</span>
+            {activeTab === t.id && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-slate-900 rounded-t-full" />}
+          </button>
+        ))}
       </div>
 
       {/* Filtros */}
@@ -300,7 +334,7 @@ export default function TicketsPage() {
         {activeTab === 'ventas' && (
           <select className="input-field w-auto" value={puntoFilter} onChange={e => setPuntoFilter(e.target.value)}>
             <option value="Todos">Todos los puntos</option>
-            {PUNTOS_VENTA.map(p => <option key={p} value={p}>{p}</option>)}
+            {puntosVenta.map(p => <option key={p} value={p}>{p}</option>)}
           </select>
         )}
       </div>
@@ -362,7 +396,7 @@ export default function TicketsPage() {
             </table>
           </div>
         )
-      ) : (
+      ) : activeTab === 'tikzet' ? (
         /* Tab Tikzet */
         filteredTikzet.length === 0 ? (
           <div className="glass-card p-16 flex flex-col items-center justify-center text-slate-400 border-dashed border-2 bg-slate-50/50">
@@ -403,12 +437,56 @@ export default function TicketsPage() {
             </table>
           </div>
         )
-      )}
+      ) : activeTab === 'mapeo' ? (
+        /* Tab Mapeo */
+        <div className="space-y-3">
+          <div className="glass-card overflow-hidden">
+            <table className="w-full text-sm text-left responsive-table">
+              <thead className="bg-slate-50 border-b border-gray-200 text-slate-500 text-xs uppercase tracking-wider font-semibold">
+                <tr>
+                  <th className="px-5 py-3">Folio</th>
+                  <th className="px-5 py-3">Zona</th>
+                  <th className="px-5 py-3">Punto</th>
+                  <th className="px-5 py-3">Estado</th>
+                  <th className="px-5 py-3 text-right">Fecha</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {mapeoSlice.map(r => (
+                  <tr key={r.folio+r.zona} className="hover:bg-slate-50">
+                    <td data-label="Folio" className="px-5 py-3 font-bold tabular-nums">{r.folio}</td>
+                    <td data-label="Zona" className="px-5 py-3"><span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px] font-bold uppercase border border-slate-200">{r.zona}</span></td>
+                    <td data-label="Punto" className="px-5 py-3 text-slate-700">{r.punto}</td>
+                    <td data-label="Estado" className="px-5 py-3"><span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${r.estado === 'vendido' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : r.estado === 'cancelado' ? 'bg-red-50 text-red-600 border-red-200' : 'bg-gray-50 text-gray-500 border-gray-200'}`}>{r.estado}</span></td>
+                    <td data-label="Fecha" className="px-5 py-3 text-right text-xs text-slate-500 tabular-nums">{r.fecha ? new Date(r.fecha).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' }) : '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {mapeoPages > 1 && (
+            <div className="flex items-center justify-center gap-2">
+              <button className="btn-secondary !py-1 !px-3 text-xs" disabled={mapeoPage === 0} onClick={() => setMapeoPage(p => p - 1)}>← Anterior</button>
+              <span className="text-xs text-slate-500">{mapeoPage + 1} / {mapeoPages}</span>
+              <button className="btn-secondary !py-1 !px-3 text-xs" disabled={mapeoPage >= mapeoPages - 1} onClick={() => setMapeoPage(p => p + 1)}>Siguiente →</button>
+            </div>
+          )}
+        </div>
+      ) : null}
 
       {/* Modales */}
+      {modalMode === 'puntos' && (
+        <Modal title="Gestionar Puntos de Venta" onClose={() => setModalMode(null)}>
+          <div className="space-y-4">
+            <div className="flex gap-2"><input className="input-field flex-1" placeholder="Nuevo punto de venta..." value={newPunto} onChange={e => setNewPunto(e.target.value)} onKeyDown={e => e.key === 'Enter' && addPunto()} /><button className="btn-primary" onClick={addPunto}><Plus size={16} /></button></div>
+            <div className="space-y-2">{puntosVenta.map(p => (<div key={p} className="flex items-center justify-between bg-slate-50 rounded-lg px-4 py-2 border border-slate-200"><span className="text-sm font-medium text-slate-900">{p}</span><button className="text-red-400 hover:text-red-600" onClick={() => removePunto(p)}><Trash2 size={14} /></button></div>))}</div>
+            {puntosVenta.length === 0 && <p className="text-sm text-slate-400 text-center py-4">No hay puntos de venta</p>}
+          </div>
+        </Modal>
+      )}
       {modalMode === 'venta' && (
         <Modal title="Registrar Venta de Boleto" onClose={() => setModalMode(null)}>
-          <VentaForm ventas={ventas} loading={saving} onSave={handleVenta} onCancel={() => setModalMode(null)} />
+          <VentaForm ventas={ventas} puntos={puntosVenta} loading={saving} onSave={handleVenta} onCancel={() => setModalMode(null)} />
         </Modal>
       )}
       {modalMode === 'tikzet' && (
