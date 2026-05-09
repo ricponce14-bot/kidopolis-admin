@@ -1,6 +1,5 @@
 import { useEffect, useState, useMemo } from 'react'
 import { supabase } from '../lib/supabase'
-import { useAuth } from '../context/AuthContext'
 import { DollarSign, TrendingUp } from 'lucide-react'
 import { ZONAS, precioZona, money, fmt } from '../lib/ticketHelpers'
 import toast from 'react-hot-toast'

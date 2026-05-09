@@ -286,7 +286,7 @@ export default function TicketsPage() {
           <p className="text-sm mt-1 text-slate-500">Registro de ventas por folio, cancelaciones y Tikzet.</p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          {isAdmin && <button className="btn-secondary" onClick={() => setModalMode('puntos')}><Settings2 size={16} /> Puntos</button>}
+          <button className="btn-secondary" onClick={() => setModalMode('puntos')}><Settings2 size={16} /> Puntos de Venta</button>
           <button className="btn-secondary" onClick={() => setModalMode('tikzet')}><Globe size={16} /> Tikzet</button>
           <button className="btn-primary" onClick={() => setModalMode('venta')}><Plus size={16} /> Registrar Venta</button>
         </div>

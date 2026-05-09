@@ -16,7 +16,8 @@ export default function PinGate({ label = 'Módulo protegido', children }) {
 
   useEffect(() => {
     supabase.from('system_config').select('*').eq('key', 'finanzas_pin').single()
-      .then(({ data }) => { if (data) setCorrectPin(data.value) })
+      .then(({ data, error }) => { if (data && !error) setCorrectPin(data.value) })
+      .catch(() => {}) // silently use default PIN
   }, [])
 
   if (unlocked) return children
