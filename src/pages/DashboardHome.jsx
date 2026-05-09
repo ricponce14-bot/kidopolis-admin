@@ -189,7 +189,7 @@ export default function DashboardHome() {
 
       {/* ═══════ SECCIÓN 1: DINERO ═══════ */}
       <div>
-        <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">💰 Flujo de Dinero</h2>
+        <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Flujo de Dinero</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Ingresos */}
           <Link to="/dashboard/tickets" className="glass-card p-5 hover:border-slate-400 transition-colors group">
@@ -243,7 +243,7 @@ export default function DashboardHome() {
 
       {/* ═══════ SECCIÓN 2: PRESUPUESTO ═══════ */}
       <div>
-        <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">📊 Presupuesto</h2>
+        <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Presupuesto</h2>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Barra de presupuesto */}
           <Link to="/dashboard/budget" className="glass-card p-6 hover:border-slate-400 transition-colors">

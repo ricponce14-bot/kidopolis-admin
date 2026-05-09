@@ -12,6 +12,7 @@ import AdsPage from './pages/AdsPage'
 import BudgetPage from './pages/BudgetPage'
 import NotesPage from './pages/NotesPage'
 import FinanzasPage from './pages/FinanzasPage'
+import PinGate from './components/PinGate'
 
 export default function App() {
   return (
@@ -38,11 +39,11 @@ export default function App() {
           {/* Protected — any authenticated user */}
           <Route element={<ProtectedRoute />}>
             <Route element={<Layout />}>
-              <Route path="/dashboard" element={<DashboardHome />} />
-              <Route path="/dashboard/budget" element={<BudgetPage />} />
+              <Route path="/dashboard" element={<PinGate label="Dashboard"><DashboardHome /></PinGate>} />
+              <Route path="/dashboard/budget" element={<PinGate label="Presupuesto Inicial"><BudgetPage /></PinGate>} />
               <Route path="/dashboard/tickets" element={<TicketsPage />} />
-              <Route path="/dashboard/expenses" element={<ExpensesPage />} />
-              <Route path="/dashboard/finanzas" element={<FinanzasPage />} />
+              <Route path="/dashboard/expenses" element={<PinGate label="Gastos Generales"><ExpensesPage /></PinGate>} />
+              <Route path="/dashboard/finanzas" element={<PinGate label="Finanzas"><FinanzasPage /></PinGate>} />
               <Route path="/dashboard/ads" element={<AdsPage />} />
               {/* Admin only */}
               <Route element={<ProtectedRoute requiredRole="admin" />}>

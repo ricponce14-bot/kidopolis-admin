@@ -1,25 +1,17 @@
 import { useEffect, useState, useMemo } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
-import { Lock, Unlock, DollarSign, ShoppingCart, Globe, Ban, TrendingUp } from 'lucide-react'
+import { DollarSign, TrendingUp } from 'lucide-react'
 import { ZONAS, precioZona, money, fmt } from '../lib/ticketHelpers'
 import toast from 'react-hot-toast'
 
 export default function FinanzasPage() {
-  const { isAdmin } = useAuth()
-  const [pinInput, setPinInput] = useState('')
-  const [unlocked, setUnlocked] = useState(false)
-  const [correctPin, setCorrectPin] = useState('0000')
   const [loading, setLoading] = useState(true)
   const [ventas, setVentas] = useState([])
   const [ventasTikzet, setVentasTikzet] = useState([])
   const [puntos, setPuntos] = useState([])
 
-  // Cargar PIN desde system_config
-  useEffect(() => {
-    supabase.from('system_config').select('*').eq('key', 'finanzas_pin').single()
-      .then(({ data }) => { if (data) setCorrectPin(data.value) })
-  }, [])
+  useEffect(() => { loadData() }, [])
 
   async function loadData() {
     setLoading(true)
@@ -35,17 +27,6 @@ export default function FinanzasPage() {
     setLoading(false)
   }
 
-  function handlePin(e) {
-    e.preventDefault()
-    if (pinInput === correctPin) {
-      setUnlocked(true)
-      loadData()
-      toast.success('Acceso concedido')
-    } else {
-      toast.error('PIN incorrecto — acceso denegado')
-      setPinInput('')
-    }
-  }
 
   // Stats por punto de venta
   const statsPorPunto = useMemo(() => {
@@ -83,35 +64,6 @@ export default function FinanzasPage() {
   const totalVentasFisicas = useMemo(() => ventas.filter(v => v.estado === 'vendido').reduce((a, v) => a + precioZona(v.zona), 0), [ventas])
   const totalGeneral = totalVentasFisicas + tikzetStats.neto
 
-  // ─── PIN SCREEN ───
-  if (!unlocked) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh] animate-fade-in">
-        <div className="glass-card p-8 w-full max-w-sm text-center">
-          <div className="w-14 h-14 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center mx-auto mb-5">
-            <Lock size={24} className="text-slate-600" />
-          </div>
-          <h2 className="text-xl font-bold text-slate-900 mb-1">Finanzas</h2>
-          <p className="text-sm text-slate-500 mb-6">Ingresa el PIN para acceder al apartado financiero.</p>
-          <form onSubmit={handlePin} className="space-y-4">
-            <input
-              type="password"
-              inputMode="numeric"
-              maxLength={6}
-              className="input-field text-center text-2xl tracking-[0.5em] font-bold"
-              value={pinInput}
-              onChange={e => setPinInput(e.target.value.replace(/\D/g, ''))}
-              placeholder="••••"
-              autoFocus
-            />
-            <button type="submit" className="btn-primary w-full">
-              <Unlock size={16} /> Desbloquear
-            </button>
-          </form>
-        </div>
-      </div>
-    )
-  }
 
   // ─── FINANZAS DASHBOARD ───
   if (loading) return <div className="flex justify-center py-20"><div className="spinner" /></div>
@@ -154,7 +106,7 @@ export default function FinanzasPage() {
 
       {/* Ventas por punto de venta */}
       <div>
-        <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">📍 Ventas por Punto de Venta</h2>
+        <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Ventas por Punto de Venta</h2>
         <div className="glass-card overflow-hidden">
           <table className="w-full text-sm text-left responsive-table">
             <thead className="bg-slate-50 border-b border-gray-200 text-slate-500 text-xs uppercase tracking-wider font-semibold">
@@ -187,7 +139,7 @@ export default function FinanzasPage() {
 
       {/* Tikzet detalle */}
       <div>
-        <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">🌐 Detalle Tikzet</h2>
+        <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Detalle Tikzet</h2>
         <div className="glass-card overflow-hidden">
           <table className="w-full text-sm text-left responsive-table">
             <thead className="bg-slate-50 border-b border-gray-200 text-slate-500 text-xs uppercase tracking-wider font-semibold">
@@ -232,7 +184,7 @@ export default function FinanzasPage() {
 
       {/* Cancelaciones */}
       <div>
-        <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">❌ Cancelaciones</h2>
+        <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Cancelaciones</h2>
         <div className="glass-card overflow-hidden">
           <table className="w-full text-sm text-left responsive-table">
             <thead className="bg-slate-50 border-b border-gray-200 text-slate-500 text-xs uppercase tracking-wider font-semibold">
