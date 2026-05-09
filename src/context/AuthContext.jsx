@@ -36,7 +36,7 @@ export function AuthProvider({ children }) {
 
     // Safety timeout: if Supabase doesn't respond in 8s, show retry
     const timer = setTimeout(() => {
-      if (mounted && loading) {
+      if (mounted) {
         setTimedOut(true)
         setLoading(false)
       }
@@ -71,15 +71,26 @@ export function AuthProvider({ children }) {
       }
     })
 
-    // Listen for auth state changes (login, logout, token refresh)
+    // Listen for auth state changes (login, logout, token refresh, session expiry)
     const authRes = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!mounted) return
+
+        // If session expired or user signed out, clear state immediately
+        if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED' && !session) {
+          setUser(null)
+          setRole(null)
+          setLoading(false)
+          setTimedOut(false)
+          return
+        }
+
         if (session?.user) {
           setUser(session.user)
           const r = await fetchRole(session.user.id)
           if (mounted) setRole(r)
         } else {
+          // No session = no user, redirect will happen via ProtectedRoute
           setUser(null)
           setRole(null)
         }
@@ -90,9 +101,25 @@ export function AuthProvider({ children }) {
 
     const subscription = authRes?.data?.subscription || authRes?.subscription
 
+    // Periodic session check every 60 seconds to catch expired tokens
+    const heartbeat = setInterval(async () => {
+      if (!mounted) return
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session && user) {
+          // Session expired while using the app
+          setUser(null)
+          setRole(null)
+        }
+      } catch {
+        // Network error — don't crash, just wait for next heartbeat
+      }
+    }, 60000)
+
     return () => {
       mounted = false
       clearTimeout(timer)
+      clearInterval(heartbeat)
       if (subscription?.unsubscribe) subscription.unsubscribe()
     }
   }, [])
@@ -105,7 +132,6 @@ export function AuthProvider({ children }) {
   function retry() {
     setTimedOut(false)
     setLoading(true)
-    // Re-attempt session fetch
     supabase.auth.getSession().then(async ({ data }) => {
       try {
         const session = data?.session
@@ -136,6 +162,8 @@ export function AuthProvider({ children }) {
 
   async function signOut() {
     await supabase.auth.signOut()
+    setUser(null)
+    setRole(null)
   }
 
   const isAdmin = role === 'admin'
