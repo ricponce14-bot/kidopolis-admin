@@ -11,6 +11,7 @@ import ExpensesPage from './pages/ExpensesPage'
 import AdsPage from './pages/AdsPage'
 import BudgetPage from './pages/BudgetPage'
 import NotesPage from './pages/NotesPage'
+import FinanzasPage from './pages/FinanzasPage'
 
 export default function App() {
   return (
@@ -41,6 +42,7 @@ export default function App() {
               <Route path="/dashboard/budget" element={<BudgetPage />} />
               <Route path="/dashboard/tickets" element={<TicketsPage />} />
               <Route path="/dashboard/expenses" element={<ExpensesPage />} />
+              <Route path="/dashboard/finanzas" element={<FinanzasPage />} />
               <Route path="/dashboard/ads" element={<AdsPage />} />
               {/* Admin only */}
               <Route element={<ProtectedRoute requiredRole="admin" />}>

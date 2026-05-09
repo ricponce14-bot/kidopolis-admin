@@ -14,6 +14,7 @@ import {
   Megaphone,
   Calculator,
   StickyNote,
+  Wallet,
 } from 'lucide-react'
 import { useState } from 'react'
 import toast from 'react-hot-toast'
@@ -23,6 +24,7 @@ const adminLinks = [
   { to: '/dashboard/budget', label: 'Presupuesto Inicial', icon: Calculator },
   { to: '/dashboard/tickets', label: 'Control de Boletos', icon: Ticket },
   { to: '/dashboard/expenses', label: 'Gastos Generales', icon: DollarSign },
+  { to: '/dashboard/finanzas', label: 'Finanzas', icon: Wallet },
   { to: '/dashboard/ads', label: 'Pauta Publicitaria', icon: Megaphone },
   { to: '/dashboard/notes', label: 'Notas Rápidas', icon: StickyNote },
   { to: '/dashboard/settings', label: 'Configuración', icon: Settings },
@@ -33,6 +35,7 @@ const visorLinks = [
   { to: '/dashboard/budget', label: 'Presupuesto Inicial', icon: Calculator },
   { to: '/dashboard/tickets', label: 'Control de Boletos', icon: Ticket },
   { to: '/dashboard/expenses', label: 'Gastos Generales', icon: DollarSign },
+  { to: '/dashboard/finanzas', label: 'Finanzas', icon: Wallet },
   { to: '/dashboard/ads', label: 'Pauta Publicitaria', icon: Megaphone },
 ]
 
