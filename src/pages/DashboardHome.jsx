@@ -8,6 +8,7 @@ import {
   AlertCircle, Download, CreditCard, Banknote
 } from 'lucide-react'
 import { createBasePDF, tableStyles, autoTable } from '../lib/pdfExport'
+import { ZONAS, precioZona, totalBoletos } from '../lib/ticketHelpers'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend
@@ -15,8 +16,6 @@ import {
 
 function money(n) { return `$${Number(n ?? 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` }
 function fmt(n) { return Number(n ?? 0).toLocaleString('es-MX') }
-
-const ZONAS = ['Zona Kids', 'Zona Pop', 'Zona Mágica']
 const CATEGORIAS_GASTOS = ['Producción', 'Logística', 'Personal', 'Venue', 'Otro']
 const PIE_COLORS = ['#0f172a', '#475569', '#94a3b8', '#cbd5e1', '#e2e8f0']
 
@@ -44,8 +43,8 @@ export default function DashboardHome() {
   const [error, setError]     = useState(null)
   
   const [budget, setBudget]   = useState(null)
-  const [boletos, setBoletos] = useState([])
-  const [movimientos, setMovimientos] = useState([])
+  const [ventasBoletos, setVentasBoletos] = useState([])
+  const [ventasTikzet, setVentasTikzet] = useState([])
   const [gastos, setGastos]   = useState([])
   const [pautas, setPautas]   = useState([])
 
@@ -54,23 +53,23 @@ export default function DashboardHome() {
     setError(null)
     
     try {
-      const [resBudget, resBoletos, resMovs, resGastos, resPautas] = await Promise.all([
+      const [resBudget, resVentas, resTikzet, resGastos, resPautas] = await Promise.all([
         supabase.from('presupuesto_general').select('*').eq('id', 1).single(),
-        supabase.from('puntos_venta').select('*'),
-        supabase.from('movimientos_folios').select('*'),
+        supabase.from('ventas_boletos').select('*'),
+        supabase.from('ventas_tikzet').select('*'),
         supabase.from('gastos').select('*'),
         supabase.from('pautas').select('*')
       ])
 
       if (resBudget.error && resBudget.error.code !== 'PGRST116') console.warn('Budget error:', resBudget.error.message)
-      if (resBoletos.error) console.warn('Boletos error:', resBoletos.error.message)
-      if (resMovs.error) console.warn('Movimientos error:', resMovs.error.message)
+      if (resVentas.error) console.warn('Ventas error:', resVentas.error.message)
+      if (resTikzet.error) console.warn('Tikzet error:', resTikzet.error.message)
       if (resGastos.error) console.warn('Gastos error:', resGastos.error.message)
       if (resPautas.error) console.warn('Pautas error:', resPautas.error.message)
 
       setBudget(resBudget.data || { total: 0, produccion: 0, logistica: 0, personal: 0, venue: 0, pauta: 0, otros: 0 })
-      setBoletos(resBoletos.data || [])
-      setMovimientos(resMovs.data || [])
+      setVentasBoletos(resVentas.data || [])
+      setVentasTikzet(resTikzet.data || [])
       setGastos(resGastos.data || [])
       setPautas(resPautas.data || [])
     } catch (err) {
@@ -83,39 +82,29 @@ export default function DashboardHome() {
 
   useEffect(() => { loadData() }, [])
 
-  // ─── INGRESOS POR BOLETOS ───
+  // ─── INGRESOS POR BOLETOS (v2: ventas_boletos + ventas_tikzet) ───
   const { ingresosBoletos, boletosVendidos, statsZonas } = useMemo(() => {
     let ingresos = 0
     let vendidosTotal = 0
     const statsMap = {}
-    ZONAS.forEach(z => { statsMap[z] = { zona: z, Vendidos: 0, Disponibles: 0, Ingresos: 0 } })
-
-    movimientos.forEach(m => {
-      const punto = boletos.find(p => p.id === m.punto_venta_id)
-      if (!punto || !statsMap[punto.zona]) return
-
-      if (m.tipo === 'asignacion') {
-        statsMap[punto.zona].Disponibles += m.cantidad
-      } else if (m.tipo === 'venta') {
-        statsMap[punto.zona].Vendidos += m.cantidad
-        statsMap[punto.zona].Disponibles = Math.max(0, statsMap[punto.zona].Disponibles - m.cantidad)
-        const ingreso = m.cantidad * Number(punto.precio_unitario)
-        statsMap[punto.zona].Ingresos += ingreso
-        ingresos += ingreso
-        vendidosTotal += m.cantidad
-      } else if (m.tipo === 'devolucion') {
-        // Reembolso: se descuenta del ingreso y de los vendidos
-        statsMap[punto.zona].Disponibles += m.cantidad
-        statsMap[punto.zona].Vendidos = Math.max(0, statsMap[punto.zona].Vendidos - m.cantidad)
-        const reembolso = m.cantidad * Number(punto.precio_unitario)
-        statsMap[punto.zona].Ingresos = Math.max(0, statsMap[punto.zona].Ingresos - reembolso)
-        ingresos -= reembolso
-        vendidosTotal = Math.max(0, vendidosTotal - m.cantidad)
-      }
+    ZONAS.forEach(z => {
+      const total = totalBoletos(z)
+      const vendidos = ventasBoletos.filter(v => v.zona === z && v.estado === 'vendido').length
+      const tikzet = ventasTikzet.filter(t => t.zona === z).reduce((a, t) => a + t.cantidad, 0)
+      const cancelados = ventasBoletos.filter(v => v.zona === z && v.estado === 'cancelado').length
+      const precio = precioZona(z)
+      const ing = vendidos * precio
+      ingresos += ing
+      vendidosTotal += vendidos
+      statsMap[z] = { zona: z, Vendidos: vendidos + tikzet, Disponibles: Math.max(0, total - vendidos - tikzet), Ingresos: ing }
     })
+    // Add Tikzet neto to ingresos
+    const tikzetNeto = ventasTikzet.reduce((a, t) => a + Number(t.monto_neto || 0), 0)
+    ingresos += tikzetNeto
+    vendidosTotal += ventasTikzet.reduce((a, t) => a + t.cantidad, 0)
 
     return { ingresosBoletos: ingresos, boletosVendidos: vendidosTotal, statsZonas: Object.values(statsMap) }
-  }, [boletos, movimientos])
+  }, [ventasBoletos, ventasTikzet])
 
   // ─── GASTOS & ABONOS ───
   const { totalGastos, totalGastosPagados, totalGastosPendientes } = useMemo(() => {
